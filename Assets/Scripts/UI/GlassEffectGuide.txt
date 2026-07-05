@@ -1,0 +1,12 @@
+Para lograr el efecto "Glassmorphism" (estilo Apple Vision Pro) en Unity:
+
+1. Crea un nuevo Material con un Shader que soporte transparencia.
+2. Configura el "Render Face" a "Both" si quieres ver el interior de la ventana.
+3. Reduce el "Alpha" en el color base (alrededor de 0.3 - 0.5).
+4. Aumenta la "Smoothness" al máximo.
+5. Si usas URP (Universal Render Pipeline), activa "Opaque Texture" en los ajustes de calidad y usa un shader de "Blur Background" para que lo que esté detrás de la ventana se vea desenfocado.
+
+Componentes sugeridos para las ventanas:
+- Canvas (World Space)
+- Panel con el Material de Cristal
+- Box Collider (para detectar colisiones de las manos/dedos)
