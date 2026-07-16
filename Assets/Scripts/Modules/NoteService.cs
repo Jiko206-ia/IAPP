@@ -16,10 +16,25 @@ public class NoteService : MonoBehaviour
     private string _savePath;
     private List<Note> _notes = new List<Note>();
 
+    // Guardamos una sola variable de texto para que Unity lo muestre en OnClick
+    public string tempNoteTitle = "Nota Rápida";
+    public string tempNoteContent = "";
+
     void Awake()
     {
         _savePath = Path.Combine(Application.persistentDataPath, "notes.json");
         LoadNotes();
+    }
+
+    // Versión simple para que Unity lo muestre sin problemas en el botón OnClick
+    public void SaveNoteSimple()
+    {
+        SaveNote(tempNoteTitle, tempNoteContent);
+    }
+
+    public void SetTempContent(string content)
+    {
+        tempNoteContent = content;
     }
 
     public void SaveNote(string title, string content)
@@ -32,6 +47,7 @@ public class NoteService : MonoBehaviour
         };
         _notes.Add(newNote);
         SyncToDisk();
+        Debug.Log("Nota Guardada Exitosamente: " + content);
     }
 
     public List<Note> GetAllNotes() => _notes;
