@@ -3,7 +3,8 @@ using System;
 
 public class GestureManager : MonoBehaviour
 {
-    public IHandProvider handProvider; // To be assigned from MediaPipe bridge
+    // Cambiamos el tipo de IHandProvider a MediaPipeHandBridge para que aparezca en el Inspector de Unity
+    public MediaPipeHandBridge handProvider; 
     
     public Action<HandData> OnPinchStart;
     public Action<HandData> OnPinchEnd;
