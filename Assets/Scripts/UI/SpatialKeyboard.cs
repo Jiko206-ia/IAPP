@@ -1,10 +1,12 @@
 using UnityEngine;
-using TMPro;
+using UnityEngine.UI; // For standard InputField
+using TMPro;          // For TextMeshPro InputField
 
 public class SpatialKeyboard : MonoBehaviour
 {
     public NoteService noteService;
-    public TMP_InputField targetInputField; // If they are looking at it on screen
+    public TMP_InputField targetInputField; // If they are using TextMeshPro InputField
+    public InputField standardInputField;  // If they are using Standard UI InputField
 
     public void TypeKey(string key)
     {
@@ -13,10 +15,16 @@ public class SpatialKeyboard : MonoBehaviour
         // Append key
         noteService.tempNoteContent += key;
 
-        // If we have an input field UI on screen, show it there too
+        // Update TextMeshPro input field if assigned
         if (targetInputField != null)
         {
             targetInputField.text = noteService.tempNoteContent;
+        }
+
+        // Update Standard input field if assigned
+        if (standardInputField != null)
+        {
+            standardInputField.text = noteService.tempNoteContent;
         }
 
         Debug.Log("Typed: " + key + " | Current content: " + noteService.tempNoteContent);
@@ -32,6 +40,11 @@ public class SpatialKeyboard : MonoBehaviour
         {
             targetInputField.text = noteService.tempNoteContent;
         }
+
+        if (standardInputField != null)
+        {
+            standardInputField.text = noteService.tempNoteContent;
+        }
     }
 
     public void Clear()
@@ -43,6 +56,11 @@ public class SpatialKeyboard : MonoBehaviour
         if (targetInputField != null)
         {
             targetInputField.text = "";
+        }
+
+        if (standardInputField != null)
+        {
+            standardInputField.text = "";
         }
     }
 }
