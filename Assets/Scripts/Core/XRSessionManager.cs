@@ -7,15 +7,40 @@ public class XRSessionManager : MonoBehaviour
 {
     public ARSession arSession;
     public ARCameraManager arCameraManager;
+    public CameraConfiguration cameraConfiguration;
     public GameObject cardboardRig; // A standard stereoscopic rig for VR
     public GameObject arRig;        // The AR Session Origin / XR Origin
 
-    public enum XRMode { AR, VR }
+    public enum XRMode { AR, VR, Fallback }
     public XRMode currentMode = XRMode.AR;
+
+    public bool autoFallbackOnUnsupported = true;
+    public bool isFallbackActive { get; private set; } = false;
 
     void Start()
     {
-        // Default to AR on start if not specified
+        StartCoroutine(InitializeXRSession());
+    }
+
+    private IEnumerator InitializeXRSession()
+    {
+        if (autoFallbackOnUnsupported)
+        {
+            // Comprobar compatibilidad con ARCore
+            if (ARSession.state == ARSessionState.None || ARSession.state == ARSessionState.CheckingAvailability)
+            {
+                yield return ARSession.CheckAvailability();
+            }
+
+            if (ARSession.state == ARSessionState.Unsupported)
+            {
+                Debug.LogWarning("ARCore no está soportado en este dispositivo (ej. ZTE Blade V60 Design). Activando modo Fallback WebCam.");
+                EnableFallbackMode();
+                yield break;
+            }
+        }
+
+        // Si es soportado o no se forzó el chequeo, procedemos con el modo por defecto
         SwitchToMode(currentMode);
     }
 
@@ -24,13 +49,39 @@ public class XRSessionManager : MonoBehaviour
         currentMode = mode;
         if (mode == XRMode.AR)
         {
+            isFallbackActive = false;
+            if (cameraConfiguration != null) cameraConfiguration.StopFallbackCamera();
             EnableAR(true);
             EnableVR(false);
         }
-        else
+        else if (mode == XRMode.VR)
         {
+            isFallbackActive = false;
+            if (cameraConfiguration != null) cameraConfiguration.StopFallbackCamera();
             EnableAR(false);
             EnableVR(true);
+        }
+        else if (mode == XRMode.Fallback)
+        {
+            EnableFallbackMode();
+        }
+    }
+
+    public void EnableFallbackMode()
+    {
+        currentMode = XRMode.Fallback;
+        isFallbackActive = true;
+
+        EnableAR(false);
+        EnableVR(false);
+
+        if (cameraConfiguration != null)
+        {
+            cameraConfiguration.RequestCameraAndStartFallback();
+        }
+        else
+        {
+            Debug.LogError("XRSessionManager: CameraConfiguration no asignado para el modo Fallback.");
         }
     }
 
@@ -39,24 +90,26 @@ public class XRSessionManager : MonoBehaviour
         if (arRig != null) arRig.SetActive(enabled);
         if (arSession != null) arSession.enabled = enabled;
         
-        if (enabled)
+        if (enabled && arSession != null)
         {
-            // Reset AR Session to start fresh tracking
-            if (arSession != null) arSession.Reset();
+            arSession.Reset();
         }
     }
 
     private void EnableVR(bool enabled)
     {
         if (cardboardRig != null) cardboardRig.SetActive(enabled);
-        
-        // When in VR/Cardboard mode, we might still want the camera background
-        // for "Passthrough" if the user requested it. 
-        // This is handled by the CameraConfiguration or a specific Passthrough script.
     }
 
     public void ToggleMode()
     {
-        SwitchToMode(currentMode == XRMode.AR ? XRMode.VR : XRMode.AR);
+        if (isFallbackActive)
+        {
+            SwitchToMode(XRMode.VR);
+        }
+        else
+        {
+            SwitchToMode(currentMode == XRMode.AR ? XRMode.VR : XRMode.AR);
+        }
     }
 }
