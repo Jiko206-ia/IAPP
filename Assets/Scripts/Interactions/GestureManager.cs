@@ -3,26 +3,43 @@ using System;
 
 public class GestureManager : MonoBehaviour
 {
-    // Cambiamos el tipo de IHandProvider a MediaPipeHandBridge para que aparezca en el Inspector de Unity
     public MediaPipeHandBridge handProvider; 
-    
+
+    [Header("Ajustes de Rendimiento ZTE / Gama Media")]
+    [Tooltip("Intervalo de actualización en segundos para limitar consumo de CPU/GPU (ej. 0.033s = ~30 FPS)")]
+    public float gestureCheckInterval = 0.033f;
+
     public Action<HandData> OnPinchStart;
     public Action<HandData> OnPinchEnd;
-    
+
     private bool _wasPinchingLeft;
     private bool _wasPinchingRight;
+    private float _timer;
 
     void Update()
     {
         if (handProvider == null) return;
 
-        CheckHand(handProvider.GetLeftHand(), ref _wasPinchingLeft);
-        CheckHand(handProvider.GetRightHand(), ref _wasPinchingRight);
+        _timer += Time.deltaTime;
+        if (_timer >= gestureCheckInterval)
+        {
+            _timer = 0f;
+            CheckHand(handProvider.GetLeftHand(), ref _wasPinchingLeft);
+            CheckHand(handProvider.GetRightHand(), ref _wasPinchingRight);
+        }
     }
 
     private void CheckHand(HandData hand, ref bool wasPinching)
     {
-        if (!hand.isTracked) return;
+        if (!hand.isTracked)
+        {
+            if (wasPinching)
+            {
+                wasPinching = false;
+                OnPinchEnd?.Invoke(hand);
+            }
+            return;
+        }
 
         if (hand.isPinching && !wasPinching)
         {
@@ -32,7 +49,7 @@ public class GestureManager : MonoBehaviour
         {
             OnPinchEnd?.Invoke(hand);
         }
-        
+
         wasPinching = hand.isPinching;
     }
 }
